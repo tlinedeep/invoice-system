@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+{% include 'partials/head.html' %}
+</head>
+<body>
+
+{% include 'partials/topbar.html' %}
+
+<div class="app">
+  {% include 'partials/sidebar.html' %}
+
+  <!-- 主内容 -->
+  <div class="main">
+
+    <!-- 左侧面板 -->
+    <div class="content-panel">
+      {% include 'tabs/dashboard.html' %}
+      {% include 'tabs/import.html' %}
+      {% include 'tabs/receiving.html' %}
+      {% include 'tabs/use_note.html' %}
+      {% include 'tabs/invoices.html' %}
+      {% include 'tabs/inventory.html' %}
+      {% include 'tabs/config.html' %}
+      {% include 'tabs/reports.html' %}
+    </div>
+
+    {% include 'partials/detail_panel.html' %}
+  </div>
+</div>
+
+{% include 'partials/scripts.html' %}
+</body>
+</html>

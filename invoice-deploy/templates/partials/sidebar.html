@@ -1,0 +1,27 @@
+<div class="sidebar">
+  <div class="menu-item active" data-tab="dashboard" onclick="gotoTab('dashboard', ()=>DashboardModule.load())">
+    <span>📊</span><span class="menu-text">数据看板</span>
+  </div>
+  <div class="menu-item" data-tab="import" onclick="gotoTab('import')">
+    <span>📥</span><span class="menu-text">发票导入</span>
+  </div>
+  <div class="menu-item" data-tab="receiving" onclick="gotoTab('receiving', ()=>ReceivingModule.loadList())">
+    <span>📋</span><span class="menu-text">点收单</span>
+  </div>
+  <div class="menu-item" data-tab="use" onclick="UseModule.page=1;gotoTab('use', ()=>UseModule.loadList())">
+    <span>📝</span><span class="menu-text">领用单</span>
+  </div>
+  <div class="menu-item" data-tab="invoices" onclick="InvoiceListModule.page=1;gotoTab('invoices', ()=>InvoiceListModule.loadList())">
+    <span>📄</span><span class="menu-text">发票列表</span>
+  </div>
+  <div class="menu-item" data-tab="inventory" onclick="InventoryModule.page=1;gotoTab('inventory', ()=>InventoryModule.load())">
+    <span>📊</span><span class="menu-text">库存台账</span>
+  </div>
+  <div class="divider"></div>
+  <div class="menu-item" data-tab="reports" onclick="gotoTab('reports', ()=>ReportModule.load())">
+    <span>📈</span><span class="menu-text">汇总报表</span>
+  </div>
+  <div class="menu-item" data-tab="config" onclick="ConfigModule.init();gotoTab('config', ()=>ConfigModule.switchSubtab('warehouses'))">
+    <span>⚙️</span><span class="menu-text">基础配置</span>
+  </div>
+</div>

@@ -1,0 +1,126 @@
+<div id="tab-import" class="tab-content" style="display:none">
+  <div style="font-size:20px;font-weight:600;margin-bottom:2px">📥 发票导入与解析</div>
+  <div style="font-size:13px;color:#5f6368;margin-bottom:14px">支持 PDF / JPG / PNG 格式，自动提取发票关键信息</div>
+
+  <!-- 拖拽区域 -->
+  <div class="card" style="overflow:visible">
+    <div class="card-body">
+      <div class="dropzone" id="dropzone"
+           onclick="document.getElementById('fileInput').click()"
+           ondragover="event.preventDefault(); this.classList.add('dragover')"
+           ondragleave="event.preventDefault(); this.classList.remove('dragover')"
+           ondrop="event.preventDefault(); this.classList.remove('dragover'); InvoiceModule.handleDrop(event)">
+        <div class="icon">📄</div>
+        <div class="title">拖拽发票文件到此处，或点击选择文件</div>
+        <div class="sub">支持 PDF、JPG、PNG 格式</div>
+        <div style="margin-top:12px">
+          <span class="btn-select" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">📁 选择文件</span>
+        </div>
+        <input type="file" id="fileInput" accept=".pdf,.jpg,.png" style="display:none" onchange="InvoiceModule.uploadFile(this)">
+      </div>
+      <div class="progress-bar" id="uploadProgress" style="display:none"><div class="fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- 发票解析结果 -->
+  <div id="parseResult" style="display:none">
+    <div class="card">
+      <div class="card-header" id="parseFileInfo">📄 发票文件 <span class="badge badge-green" style="margin-left:auto">✔ 解析成功</span></div>
+      <div class="card-body">
+        <div id="parseHint" class="alert alert-warning" style="display:none;margin-bottom:12px">
+          ⚠ <span id="parseHintText">解析结果为示例数据，请核对后修改</span>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>发票号码</label><input class="form-control" id="piInvoiceNo"></div>
+          <div class="form-group"><label>销售单位</label><input class="form-control" id="piSeller"></div>
+          <div class="form-group"><label>信用代码</label><input class="form-control" id="piTaxNo" style="font-size:12px"></div>
+          <div class="form-group"><label id="piAmountLabel">金额</label><input class="form-control" id="piAmount" style="color:#1a73e8;font-weight:700"></div>
+          <div class="form-group"><label>税额</label><input class="form-control" id="piTaxAmt" style="color:#ea4335;font-weight:700"></div>
+          <div class="form-group"><label>开票日期</label><input class="form-control" id="piDate" placeholder="选择日期"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="position:relative"><label>仓库</label><input class="form-control" id="piWarehouse" placeholder="输入仓库名称或编码搜索" autocomplete="off"><div id="piWarehouseSuggest" class="autocomplete-dropdown"></div></div>
+          <div class="form-group"><label>含税/不含税</label>
+            <div style="display:flex;gap:4px;padding:6px 0;align-items:center;flex-wrap:wrap">
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;font-weight:400">
+                <input type="radio" name="taxType" value="1" id="piTaxInclusive" onchange="InvoiceModule.onTaxToggle()"> 含税
+              </label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;font-weight:400">
+                <input type="radio" name="taxType" value="0" id="piTaxExclusive" onchange="InvoiceModule.onTaxToggle()" checked> 不含税
+              </label>
+              <span style="margin-left:8px;font-size:12px;color:#9aa0a6">税率</span>
+              <select id="piTaxRate" style="padding:4px 6px;border:1px solid #dadce0;border-radius:4px;font-size:12px" onchange="InvoiceModule.onTaxRateChange()">
+                <option value="0.13">13%</option>
+                <option value="0.09">9%</option>
+                <option value="0.06">6%</option>
+                <option value="0.03">3%</option>
+                <option value="0">0%</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>点收方式</label>
+            <div style="display:flex;gap:8px;padding:6px 0;align-items:center;flex-wrap:wrap">
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;font-weight:400">
+                <input type="radio" name="recvMode" value="0" checked onchange="InvoiceModule.onBatchModeToggle()"> 逐行点收
+              </label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;font-weight:400">
+                <input type="radio" name="recvMode" value="1" onchange="InvoiceModule.onBatchModeToggle()"> 按批次点收
+              </label>
+            </div>
+          </div>
+          <div class="form-group"><label style="color:#1a73e8;font-weight:700">点收日期</label><input class="form-control" id="piRecvDate" placeholder="选择日期"></div>
+        </div>
+
+        <div style="margin-top:12px;font-weight:600;font-size:13px;margin-bottom:6px">材料明细：</div>
+        <div class="table-wrap">
+          <table class="data-table" id="piItemsTable">
+            <thead><tr><th>序号</th><th>材料名称</th><th>规格型号</th><th>单位</th><th>数量</th><th id="piUnitPriceLabel">单价</th><th>金额</th><th style="width:50px">操作</th></tr></thead>
+            <tbody id="piItemsBody"></tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #e0e0e0">
+          <span style="color:#5f6368;font-size:12px">合计：<strong id="piTotalQty">0</strong></span>
+          <div style="display:flex;gap:16px;align-items:center;font-size:14px">
+            <span style="color:#5f6368">税额：<strong id="piTotalTax">0.00</strong></span>
+            <span style="color:#5f6368" id="piTotalLabel">不含税合计</span>：
+            <span style="font-size:18px;font-weight:700;color:#1a73e8">¥ <span id="piTotalAmt">0</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="overflow:visible">
+      <div class="card-header">🏗️ 工程与人员信息</div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group" style="position:relative"><label>工程编号</label>
+            <input class="form-control" id="piProjectNo" placeholder="输入关键字搜索..." autocomplete="off">
+            <div id="piProjectSuggest" class="autocomplete-dropdown"></div>
+          </div>
+          <div class="form-group" style="flex:2"><label>工程名称</label><input class="form-control" id="piProjectName" readonly></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="position:relative"><label>记账人</label><input class="form-control autocomplete-wrap" id="piAccountant" placeholder="输入关键字搜索..." autocomplete="off"><div class="autocomplete-dropdown"></div></div>
+          <div class="form-group" style="position:relative"><label>采购员</label><input class="form-control autocomplete-wrap" id="piBuyer" placeholder="输入关键字搜索..." autocomplete="off"><div class="autocomplete-dropdown"></div></div>
+          <div class="form-group" style="position:relative"><label>领用人</label><input class="form-control autocomplete-wrap" id="piRecipient" placeholder="输入关键字搜索..." autocomplete="off"><div class="autocomplete-dropdown"></div></div>
+          <div class="form-group"><label>发票号码及数量</label><input class="form-control" id="piInvoiceNoList" readonly></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="InvoiceModule.reset()">🔄 重新导入</button>
+        <button class="btn btn-primary" onclick="ReceivingModule.createFromInvoice()">📋 生成点收单</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 空状态 -->
+  <div class="card" id="importEmpty">
+    <div class="empty-state">
+      <div class="icon">📂</div>
+      <div class="text">请上传发票文件开始</div>
+    </div>
+  </div>
+</div>
