@@ -368,6 +368,7 @@ const ReceivingModule = {
       };
       if (!_v(document.getElementById("rdAccountant"), "记账人", "accountants")) return;
       if (!_v(document.getElementById("rdBuyer"), "采购员", "buyers")) return;
+      if (!_v(document.getElementById("rdRecipient"), "领用人", "recipients")) return;
 
       const body = {
         warehouse_code: document.getElementById("rdWarehouse").value.split("-")[0] || document.getElementById("rdWarehouse").value,
