@@ -219,6 +219,8 @@ const ReceivingModule = {
       document.getElementById("rdNoteNo").value = note.note_no;
       document.getElementById("rdWarehouse").value = note.warehouse_label || note.warehouse_code || "未分类";
       document.getElementById("rdDate").value = note.date;
+      const rdUseDate = document.getElementById("rdUseDate");
+      if (rdUseDate) rdUseDate.value = note.date;
 
       // 状态：显示领用进度
       const statusHtml = note.has_use_note
@@ -496,6 +498,8 @@ const ReceivingModule = {
     }
 
     const recipient = APP.initData?.recipients?.[0]?.name || "王晓伟";
+    const rdUseDate = document.getElementById("rdUseDate");
+    const useDate = rdUseDate ? rdUseDate.value : note.date;
     const payload = available.map(it => {
       // 数量=库存余量，金额=库存剩余金额，单价反算
       const qty = it.remaining_qty;
@@ -516,7 +520,7 @@ const ReceivingModule = {
       const resp = await fetch(`/api/v1/use-notes/from-receiving/${recvId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipient, items: payload }),
+        body: JSON.stringify({ recipient, items: payload, date: useDate }),
       });
 
       if (!resp.ok) { const e = await resp.json(); throw new Error(e.error || "生成失败"); }
