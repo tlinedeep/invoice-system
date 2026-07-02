@@ -184,6 +184,7 @@ def generate_batch_workbook(title_prefix: str, notes, note_info_fn, output_path:
     s_title = Font(name="微软雅黑", size=14, bold=True)
     s_header = Font(name="微软雅黑", size=10, bold=True)
     s_normal = Font(name="微软雅黑", size=10)
+    s_bold = Font(name="微软雅黑", size=10, bold=True)
     fill = PatternFill(start_color="F8F9FA", end_color="F8F9FA", fill_type="solid")
     thin = Border(left=Side(style="thin"), right=Side(style="thin"),
                   top=Side(style="thin"), bottom=Side(style="thin"))
@@ -199,7 +200,7 @@ def generate_batch_workbook(title_prefix: str, notes, note_info_fn, output_path:
         c.font = s_title; c.alignment = center
         row += 1
 
-        # 信息行
+        # 信息行（与单个导出一致）
         info_text = note_data.get("info_line", "")
         if info_text:
             ws.cell(row=row, column=1, value=info_text).font = s_normal
@@ -228,6 +229,36 @@ def generate_batch_workbook(title_prefix: str, notes, note_info_fn, output_path:
             ws.cell(row=row, column=7).number_format = '#,##0.00'
             for c in range(1, 8):
                 ws.cell(row=row, column=c).border = thin
+            row += 1
+
+        # 底部信息（与单个导出一致）
+        row += 1
+        project_no = note_data.get("project_no", "")
+        project_name = note_data.get("project_name", "")
+        accountant = note_data.get("accountant", "")
+        buyer = note_data.get("buyer", "")
+        recipient = note_data.get("recipient", "")
+
+        if project_no or project_name:
+            ws.cell(row=row, column=1, value=f"工程编号：{project_no}").font = s_normal
+            ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+            ws.cell(row=row, column=4, value=f"工程名称：{project_name}").font = s_normal
+            ws.merge_cells(start_row=row, start_column=4, end_row=row, end_column=7)
+            row += 1
+
+        info_left = ""
+        info_right = ""
+        if accountant:
+            info_left = f"记账人：{accountant}"
+        if buyer:
+            info_right = f"采购员：{buyer}"
+        elif recipient:
+            info_right = f"领用人：{recipient}"
+        if info_left or info_right:
+            ws.cell(row=row, column=1, value=info_left).font = s_normal
+            ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=3)
+            ws.cell(row=row, column=4, value=info_right).font = s_normal
+            ws.merge_cells(start_row=row, start_column=4, end_row=row, end_column=7)
             row += 1
 
         row += 2  # 每个单之间空行

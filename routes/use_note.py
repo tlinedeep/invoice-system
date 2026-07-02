@@ -252,9 +252,21 @@ def batch_export():
     notes = UseNote.query.filter(UseNote.id.in_(ids)).order_by(UseNote.id).all()
 
     def note_info(note):
+        from services.warehouse_matcher import get_warehouse_list
+        wh_label = note.warehouse_code or "00"
+        for wh in get_warehouse_list():
+            if wh["code"] == note.warehouse_code:
+                wh_label = wh["label"]
+                break
         note_data = {
             "note_no": note.note_no,
-            "info_line": f"日期: {note.date}    领用人: {note.recipient or ''}",
+            "info_line": f"日期: {note.date}    仓库: {wh_label}    领用人: {note.recipient or ''}",
+            "warehouse_label": wh_label,
+            "date": note.date,
+            "project_no": note.project_no,
+            "project_name": note.project_name,
+            "accountant": note.accountant,
+            "recipient": note.recipient or "",
         }
         items_data = [{
             "material_name": it.material_name,
