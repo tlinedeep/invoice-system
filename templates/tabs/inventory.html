@@ -1,0 +1,20 @@
+<div id="tab-inventory" class="tab-content" style="display:none">
+  <div style="font-size:20px;font-weight:600;margin-bottom:2px">📊 库存台账</div>
+  <div style="font-size:13px;color:#5f6368;margin-bottom:14px">当前库存 = 点收总数 - 领用总数</div>
+
+  <div class="card" style="overflow:visible">
+    <div class="card-body" style="padding:8px 12px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="form-control" style="max-width:250px" placeholder="搜索材料名称..." id="invInventorySearch">
+        <button class="btn btn-outline btn-sm" onclick="InventoryModule.page=1;InventoryModule.load()">🔍 搜索</button>
+        <span style="font-size:12px;font-weight:600;color:#5f6368;white-space:nowrap">🏭 仓库</span>
+        <div id="invWarehouseFilter" style="min-width:160px"></div>
+        <span style="flex:1"></span>
+        <button class="btn btn-outline btn-sm" onclick="InventoryModule.exportExcel()">📥 导出Excel</button>
+        <span style="font-size:12px;color:#5f6368">共 <strong id="invTotalCount">0</strong> 种材料</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="invContent"></div>
+</div>

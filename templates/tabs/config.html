@@ -1,0 +1,18 @@
+<div id="tab-config" class="tab-content" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div><div style="font-size:18px;font-weight:600">⚙️ 基础数据配置</div>
+    <div style="font-size:12px;color:#5f6368">管理仓库分类、工程列表、人员名单</div></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;border-bottom:2px solid #e0e0e0;background:#fafafa">
+      <div class="tab-item active" data-subtab="warehouses" onclick="ConfigModule.switchSubtab('warehouses')">🏭 仓库管理</div>
+      <div class="tab-item" data-subtab="projects" onclick="ConfigModule.switchSubtab('projects')">🏗️ 工程管理</div>
+      <div class="tab-item" data-subtab="personnel" onclick="ConfigModule.switchSubtab('personnel')">📝 单据人员</div>
+      <div class="tab-item" data-subtab="suppliers" onclick="ConfigModule.switchSubtab('suppliers')">🏢 供应商管理</div>
+      <div class="tab-item" data-subtab="users" onclick="ConfigModule.switchSubtab('users')">🔑 登录账号</div>
+      <div class="tab-item" data-subtab="logs" onclick="ConfigModule.switchSubtab('logs')">📋 操作日志</div>
+    </div>
+    <div class="card-body" id="configContent"></div>
+  </div>
+</div>

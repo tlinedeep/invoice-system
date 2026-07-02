@@ -1,0 +1,22 @@
+<div id="tab-dashboard" class="tab-content fade-in">
+  <div style="font-size:20px;font-weight:600;margin-bottom:14px">📊 数据看板</div>
+
+  <div class="card" style="overflow:visible">
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px" id="dashStats"></div>
+    </div>
+  </div>
+
+  <div class="card" style="overflow:hidden">
+    <div class="card-header">🏭 各仓库入库金额</div>
+    <div class="card-body" style="padding:16px">
+      <div id="dashWarehouses" style="margin-bottom:8px"></div>
+      <div style="height:200px;width:100%"><canvas id="warehouseChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="overflow:hidden">
+    <div class="card-header">📈 月度趋势 <span style="font-size:12px;color:#9aa0a6;font-weight:400">（点收金额）</span></div>
+    <div class="card-body" style="padding:16px"><div style="height:200px;width:100%"><canvas id="trendChart"></canvas></div></div>
+  </div>
+</div>

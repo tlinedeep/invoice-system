@@ -1,0 +1,30 @@
+<div class="status-bar">
+  <span>就绪</span>
+  <span id="statusInfo">物资点收领用平台 v0.40</span>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== 页面初始化（保持简短，只启动） =====
+document.addEventListener("DOMContentLoaded", function() {
+  ["recvSearch","useSearch","invSearch","invInventorySearch"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("keydown", function(e) { if (e.key === "Enter") { switch(id){case'recvSearch':ReceivingModule.page=1;ReceivingModule.loadList();break;case'useSearch':UseModule.page=1;UseModule.loadList();break;case'invSearch':InvoiceListModule.page=1;InvoiceListModule.loadList();break;case'invInventorySearch':InventoryModule.page=1;InventoryModule.load();break;} } });
+  });
+  window.addEventListener("beforeunload", function(e) {
+    const recvEdit = document.getElementById("recvDetail")?.dataset.editMode === "true";
+    const useEdit = document.getElementById("useDetail")?.dataset.editMode === "true";
+    if (recvEdit || useEdit) { e.preventDefault(); e.returnValue = ""; }
+  });
+  initApp();
+});
+</script>
+
+<script src="/static/js/invoice.js"></script>
+<script src="/static/js/receiving.js"></script>
+<script src="/static/js/use_note.js"></script>
+<script src="/static/js/config.js"></script>
+<script src="/static/js/inventory.js"></script>
+<script src="/static/js/dashboard.js"></script>
+<script src="/static/js/report.js"></script>

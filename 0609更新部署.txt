@@ -1,0 +1,15 @@
+● 已经是最新的了，invoice-deploy.tar.gz（4.6MB，含 invoice.js 修复）在本地已就绪。把这个上传到群晖后：   
+  cd /volume1/docker/invoice-deploy/
+  # 先清理上次可能遗留的乱文件
+  rm -rf routes/ services/ static/ templates/ repositories/ parsers/ alembic/
+  find . -maxdepth 1 -name "*.py" -type f -delete
+
+  # 上传 invoice-deploy.tar.gz 到此目录
+  
+  # 解压（有 invoice-deploy/ 根目录，--strip-components=1 正好去掉它）
+  tar -xzf invoice-deploy.tar.gz --strip-components=1
+
+  # 部署
+  sudo bash update.sh
+
+  包里包含了我刚才改的 invoice.js（删除行实时汇总），重建镜像后会生效。

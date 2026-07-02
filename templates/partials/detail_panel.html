@@ -1,0 +1,26 @@
+<div class="detail-panel">
+  <div class="detail-card">
+    <div class="header">📋 当前会话</div>
+    <div class="body">
+      <div class="detail-item"><span class="label">用户</span><span class="value" id="dpUser">-</span></div>
+      <div class="detail-item"><span class="label">当前月份</span><span class="value" id="dpMonth">-</span></div>
+      <div class="detail-item"><span class="label">最新编号</span><span class="value" id="dpLastNo">-</span></div>
+      <div class="detail-item"><span class="label">数据库</span><span class="value">PostgreSQL</span></div>
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="header">⚡ 快捷操作</div>
+    <div class="body" style="display:flex;flex-direction:column;gap:5px">
+      <button class="btn btn-primary btn-sm" style="justify-content:center" onclick="gotoTab('import',()=>document.getElementById('fileInput').click())">📥 导入新发票</button>
+      <button class="btn btn-outline btn-sm" style="justify-content:center" onclick="gotoTab('receiving',()=>ReceivingModule.loadList())">📋 查看点收单</button>
+      <button class="btn btn-success btn-sm" style="justify-content:center" onclick="UseModule.page=1;gotoTab('use',()=>UseModule.loadList())">📝 查看领用单</button>
+      <button class="btn btn-outline btn-sm" style="justify-content:center" onclick="gotoTab('config',()=>{ConfigModule.switchSubtab('projects');ConfigModule.showProjectForm()})">🏗️ 添加工程</button>
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <div class="header">🕐 最近记录</div>
+    <div id="recentList" class="body" style="padding:0;max-height:320px;overflow-y:auto"></div>
+  </div>
+</div>

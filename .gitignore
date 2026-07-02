@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+instance/
+*.db
+*.db-shm
+*.db-wal
+.secret_key
+logs/
+uploads/
+*.traineddata
+data_backup_*.json
+hotfix-*.tar.gz
+*.tar.gz
+.DS_Store
