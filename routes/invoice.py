@@ -70,6 +70,23 @@ def parse():
 
     log_operation("create", "invoice", invoice.id, f"导入发票 {result.get('invoice_no', '')} - {result.get('seller_name', '')}，金额 ¥{result.get('total_amount', 0):.2f}")
 
+    # 从文件名提取工程编号（匹配基础配置中的工程管理列表）
+    detected_project_no = None
+    detected_project_name = None
+    try:
+        original_name = file.filename
+        # 查询所有工程编号，按长度降序排列（最长匹配优先）
+        from models import Project
+        projects = Project.query.with_entities(Project.project_no, Project.project_name).all()
+        projects_sorted = sorted(projects, key=lambda p: len(p.project_no), reverse=True)
+        for p in projects_sorted:
+            if original_name.startswith(p.project_no):
+                detected_project_no = p.project_no
+                detected_project_name = p.project_name
+                break
+    except Exception:
+        pass  # 提取失败不影响正常流程
+
     return jsonify({
         "id": invoice.id,
         "invoice_no": result["invoice_no"],
@@ -83,6 +100,8 @@ def parse():
         "items": result["items"],
         "_hint": result.get("_hint", ""),
         "_blank": result.get("_blank", False),
+        "detected_project_no": detected_project_no,
+        "detected_project_name": detected_project_name,
     })
 
 

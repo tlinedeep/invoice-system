@@ -238,6 +238,19 @@ const InvoiceModule = {
         `${esc(data.invoice_no)}              共1张`;
 
       this.onTaxToggle();
+
+      // 从文件名自动匹配工程编号
+      if (data.detected_project_no && data.detected_project_name) {
+        const pjInput = document.getElementById("piProjectNo");
+        const pjNameInput = document.getElementById("piProjectName");
+        if (pjInput && pjNameInput) {
+          pjInput.value = data.detected_project_no;
+          pjInput.dataset.valid = "true";
+          pjInput.style.borderColor = "";
+          pjNameInput.value = data.detected_project_name;
+          pjNameInput.style.borderColor = "";
+        }
+      }
     } catch (e) {
       console.error("displayResult error:", e);
       toast("显示解析结果时出错", "error");
