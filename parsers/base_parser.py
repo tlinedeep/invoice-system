@@ -641,6 +641,9 @@ def _extract_invoice_from_text(text: str, source: str = "pdf") -> dict | None:
         companies = re.findall(r"([^\s]*有限公司)", text)
         if companies:
             seller_name = companies[-1]
+    # 清理 PDF 标签前缀污染（如 "：北京京东..."、"名称：中交..."）
+    if seller_name:
+        seller_name = re.sub(r"^(?:名称|销[售]?[方]?)[：:]*", "", seller_name).lstrip("：:").strip()
 
     seller_tax_no = ""
     cleaned_text = re.sub(r"统一发票监[\s\n]*制[\s\n]*\w{20,}", "", text)
