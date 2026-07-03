@@ -288,20 +288,23 @@ const ReportModule = {
 
   _renderTable(items) {
     const tbody = document.getElementById('rptTableBody');
-    // 恢复明细视图的 9 列表头
+    // 恢复明细视图的 11 列表头（含点收/领用数量）
     const thead = document.querySelector('#rptTable thead tr');
-    thead.innerHTML = '<th style="text-align:center">月份</th><th style="text-align:center">工程编号</th><th>工程名称</th><th>仓库</th><th>供应商</th><th style="text-align:center">点收单数</th><th style="text-align:right">点收金额</th><th style="text-align:center">领用单数</th><th style="text-align:right">领用金额</th>';
+    thead.innerHTML = '<th style="text-align:center">月份</th><th style="text-align:center">工程编号</th><th>工程名称</th><th>仓库</th><th>供应商</th><th style="text-align:center">点收单数</th><th style="text-align:right">点收数量</th><th style="text-align:right">点收金额</th><th style="text-align:center">领用单数</th><th style="text-align:right">领用数量</th><th style="text-align:right">领用金额</th>';
     if (!items || items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#9aa0a6">暂无数据</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#9aa0a6">暂无数据</td></tr>';
       return;
     }
 
     let totalRecvCnt = 0, totalRecvAmt = 0, totalUseCnt = 0, totalUseAmt = 0;
+    let totalRecvQty = 0, totalUseQty = 0;
 
     tbody.innerHTML = items.map(item => {
       totalRecvCnt += item.recv_cnt || 0;
+      totalRecvQty += item.recv_qty || 0;
       totalRecvAmt += item.recv_amt || 0;
       totalUseCnt += item.use_cnt || 0;
+      totalUseQty += item.use_qty || 0;
       totalUseAmt += item.use_amt || 0;
 
       return `<tr>
@@ -311,8 +314,10 @@ const ReportModule = {
         <td>${esc(item.warehouse_code || '')}${esc(item.warehouse_name || '')}</td>
         <td>${esc(item.supplier || '')}</td>
         <td style="text-align:center">${item.recv_cnt || 0}</td>
+        <td style="text-align:right">${(item.recv_qty || 0).toFixed(3)}</td>
         <td style="text-align:right;color:#1a73e8;font-weight:600">¥${(item.recv_amt || 0).toFixed(2)}</td>
         <td style="text-align:center">${item.use_cnt || 0}</td>
+        <td style="text-align:right">${(item.use_qty || 0).toFixed(3)}</td>
         <td style="text-align:right;color:#ea8600;font-weight:600">¥${(item.use_amt || 0).toFixed(2)}</td>
       </tr>`;
     }).join('');
@@ -320,8 +325,10 @@ const ReportModule = {
     tbody.innerHTML += `<tr style="font-weight:700;background:#f8f9fa;border-top:2px solid #e0e0e0">
       <td colspan="5" style="text-align:right;color:#202124">合计</td>
       <td style="text-align:center">${totalRecvCnt}</td>
+      <td style="text-align:right">${totalRecvQty.toFixed(3)}</td>
       <td style="text-align:right;color:#1a73e8">¥${totalRecvAmt.toFixed(2)}</td>
       <td style="text-align:center">${totalUseCnt}</td>
+      <td style="text-align:right">${totalUseQty.toFixed(3)}</td>
       <td style="text-align:right;color:#ea8600">¥${totalUseAmt.toFixed(2)}</td>
     </tr>`;
   },

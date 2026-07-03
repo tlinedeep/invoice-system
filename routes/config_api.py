@@ -733,24 +733,28 @@ def report_query():
     ym_expr_recv = f"{month_expr('r.date')} as ym"
     ym_expr_use = f"{month_expr('u.date')} as ym"
 
-    # 点收汇总
+    # 点收汇总（含数量合计）
     recv_sql = text(f"""
         SELECT {ym_expr_recv}, r.project_no, r.project_name,
                r.warehouse_code, r.seller_name,
-               COUNT(*) as cnt, SUM(r.total_amount) as amt
+               COUNT(*) as cnt, SUM(r.total_amount) as amt,
+               COALESCE(SUM(riq.note_qty), 0) as qty
         FROM receiving_notes r
+        LEFT JOIN (SELECT note_id, SUM(quantity) as note_qty FROM receiving_items GROUP BY note_id) riq ON riq.note_id = r.id
         WHERE r.status='active' AND {recv_where}
         GROUP BY {month_expr('r.date')}, r.project_no, r.project_name, r.warehouse_code, r.seller_name
         ORDER BY {month_expr('r.date')} DESC, r.project_no
     """)
     recv_rows = db.session.execute(recv_sql, params).fetchall()
 
-    # 领用汇总
+    # 领用汇总（含数量合计）
     use_sql = text(f"""
         SELECT {ym_expr_use}, u.project_no, u.project_name,
                u.warehouse_code, COALESCE(r.seller_name,'') as seller_name,
-               COUNT(*) as cnt, SUM(u.total_amount) as amt
+               COUNT(*) as cnt, SUM(u.total_amount) as amt,
+               COALESCE(SUM(uiq.note_qty), 0) as qty
         FROM use_notes u
+        LEFT JOIN (SELECT note_id, SUM(quantity) as note_qty FROM use_items GROUP BY note_id) uiq ON uiq.note_id = u.id
         LEFT JOIN receiving_notes r ON r.id = u.receiving_note_id
         WHERE u.status='active' AND {use_where}
         GROUP BY {month_expr('u.date')}, u.project_no, u.project_name, u.warehouse_code, r.seller_name
@@ -766,22 +770,23 @@ def report_query():
             "ym": r.ym, "project_no": r.project_no,
             "project_name": r.project_name, "warehouse_code": r.warehouse_code,
             "supplier": r.seller_name,
-            "recv_cnt": r.cnt, "recv_amt": round(float(r.amt or 0), 2),
-            "use_cnt": 0, "use_amt": 0,
+            "recv_cnt": r.cnt, "recv_qty": round(float(r.qty or 0), 3), "recv_amt": round(float(r.amt or 0), 2),
+            "use_cnt": 0, "use_qty": 0, "use_amt": 0,
         }
 
     for r in use_rows:
         key = (r.ym, r.project_no, r.warehouse_code, r.seller_name)
         if key in key_map:
             key_map[key]["use_cnt"] += r.cnt
+            key_map[key]["use_qty"] += round(float(r.qty or 0), 3)
             key_map[key]["use_amt"] += round(float(r.amt or 0), 2)
         else:
             key_map[key] = {
                 "ym": r.ym, "project_no": r.project_no,
                 "project_name": r.project_name, "warehouse_code": r.warehouse_code,
                 "supplier": r.seller_name,
-                "recv_cnt": 0, "recv_amt": 0,
-                "use_cnt": r.cnt, "use_amt": round(float(r.amt or 0), 2),
+                "recv_cnt": 0, "recv_qty": 0, "recv_amt": 0,
+                "use_cnt": r.cnt, "use_qty": round(float(r.qty or 0), 3), "use_amt": round(float(r.amt or 0), 2),
             }
 
     items = sorted(key_map.values(), key=lambda x: (x["ym"], x["project_no"]), reverse=True)
@@ -796,6 +801,8 @@ def report_query():
     total_use_amt = sum(i["use_amt"] for i in items)
     total_recv_cnt = sum(i["recv_cnt"] for i in items)
     total_use_cnt = sum(i["use_cnt"] for i in items)
+    total_recv_qty = round(sum(i["recv_qty"] for i in items), 3)
+    total_use_qty = round(sum(i["use_qty"] for i in items), 3)
 
     # 获取筛选选项（从 unified 接口中获取各维度过滤条件合并到单个 filters 键）
     filter_opts = _get_filter_options(db.session)
@@ -881,6 +888,8 @@ def report_query():
             "use_amt": total_use_amt,
             "recv_cnt": total_recv_cnt,
             "use_cnt": total_use_cnt,
+            "recv_qty": total_recv_qty,
+            "use_qty": total_use_qty,
         },
         "items": items,
         "grouped_by_warehouse": grouped_by_warehouse,
@@ -1077,11 +1086,13 @@ def report_query_export():
         ws.cell(row=row, column=4, value=total_use_cnt).font = s["bold_font"]
         c5 = ws.cell(row=row, column=5, value=total_use_amt); c5.font = s["bold_font"]; c5.number_format = '#,##0.00'
     else:
-        # 明细视图（原逻辑）
+        # 明细视图（含点收/领用数量合计）
         wb, ws, s = new_report_wb(
             "物资点收领用汇总报表",
-            ["月份", "工程编号", "工程名称", "仓库", "供应商", "点收单数", "点收金额", "领用单数", "领用金额"],
-            [(1, 10), (2, 12), (3, 25), (4, 10), (5, 25), (6, 10), (7, 16), (8, 10), (9, 16)]
+            ["月份", "工程编号", "工程名称", "仓库", "供应商",
+             "点收单数", "点收数量", "点收金额", "领用单数", "领用数量", "领用金额"],
+            [(1, 10), (2, 12), (3, 25), (4, 10), (5, 25),
+             (6, 10), (7, 12), (8, 16), (9, 10), (10, 12), (11, 16)]
         )
         ws.title = "汇总报表"
         for i, item in enumerate(items, 3):
@@ -1091,24 +1102,32 @@ def report_query_export():
             ws.cell(row=i, column=4, value=item.get("warehouse_code", "") + item.get("warehouse_name", ""))
             ws.cell(row=i, column=5, value=item.get("supplier", ""))
             ws.cell(row=i, column=6, value=item.get("recv_cnt", 0))
-            c7 = ws.cell(row=i, column=7, value=item.get("recv_amt", 0))
-            c7.number_format = '#,##0.00'
-            ws.cell(row=i, column=8, value=item.get("use_cnt", 0))
-            c9 = ws.cell(row=i, column=9, value=item.get("use_amt", 0))
-            c9.number_format = '#,##0.00'
-            for col in range(1, 10):
+            c7 = ws.cell(row=i, column=7, value=item.get("recv_qty", 0))
+            c7.number_format = '#,##0.000'
+            c8 = ws.cell(row=i, column=8, value=item.get("recv_amt", 0))
+            c8.number_format = '#,##0.00'
+            ws.cell(row=i, column=9, value=item.get("use_cnt", 0))
+            c10 = ws.cell(row=i, column=10, value=item.get("use_qty", 0))
+            c10.number_format = '#,##0.000'
+            c11 = ws.cell(row=i, column=11, value=item.get("use_amt", 0))
+            c11.number_format = '#,##0.00'
+            for col in range(1, 12):
                 ws.cell(row=i, column=col).font = s["normal_font"]
                 ws.cell(row=i, column=col).border = s["thin_border"]
-                if col in (1, 6, 8):
+                if col in (1, 6, 9):
                     ws.cell(row=i, column=col).alignment = s["center_align"]
         row = len(items) + 3
         ws.cell(row=row, column=1, value="合计").font = s["bold_font"]
         ws.cell(row=row, column=6, value=summary.get("recv_cnt", 0)).font = s["bold_font"]
-        c7 = ws.cell(row=row, column=7, value=summary.get("recv_amt", 0))
-        c7.font = s["bold_font"]; c7.number_format = '#,##0.00'
-        ws.cell(row=row, column=8, value=summary.get("use_cnt", 0)).font = s["bold_font"]
-        c9 = ws.cell(row=row, column=9, value=summary.get("use_amt", 0))
-        c9.font = s["bold_font"]; c9.number_format = '#,##0.00'
+        c7 = ws.cell(row=row, column=7, value=summary.get("recv_qty", 0))
+        c7.font = s["bold_font"]; c7.number_format = '#,##0.000'
+        c8 = ws.cell(row=row, column=8, value=summary.get("recv_amt", 0))
+        c8.font = s["bold_font"]; c8.number_format = '#,##0.00'
+        ws.cell(row=row, column=9, value=summary.get("use_cnt", 0)).font = s["bold_font"]
+        c10 = ws.cell(row=row, column=10, value=summary.get("use_qty", 0))
+        c10.font = s["bold_font"]; c10.number_format = '#,##0.000'
+        c11 = ws.cell(row=row, column=11, value=summary.get("use_amt", 0))
+        c11.font = s["bold_font"]; c11.number_format = '#,##0.00'
 
     export_dir = os.path.join(current_app.config.get("UPLOAD_FOLDER", "uploads"), "exports")
     os.makedirs(export_dir, exist_ok=True)
